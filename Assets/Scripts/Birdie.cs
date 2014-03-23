@@ -2,8 +2,14 @@
 
 public class Birdie : MonoBehaviour
 {
-    void OnTriggerEnter2D()
+    void OnTriggerEnter2D(Collider2D col)
     {
-        FlappyController.Instance.BirdieCrashed();
+        if (col.name.Equals("Scorer"))
+        {
+            col.collider2D.enabled = false;
+            FlappyController.Instance.Score++;
+        }
+        else
+            FlappyController.Instance.BirdieCrashed();
     }
 }

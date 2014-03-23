@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using UnityEngine;
 using System.Collections;
 using Random = UnityEngine.Random;
@@ -14,7 +15,11 @@ public class FlappyController : MonoBehaviour
     private Vector3 _birdieStartingPosition;
     private Vector3 _tubeHolderStartingPosition;
 
-    public int Score;
+    public TextMesh TapText;
+    public TextMesh ScoreText;
+    public TextMesh FinalScoreText;
+    public TextMesh FinalHiScoreText;
+    public Transform AspectRatioScaler;
     public float Gravity;
     public float JumpSpeed;
     public float TubeSpeed;
@@ -26,6 +31,7 @@ public class FlappyController : MonoBehaviour
     public SpriteRenderer GetReadySprite;
     public SpriteRenderer BackgroundSprite;
 
+    public BirdieSwing Swing;
     public GameObject EndMenu;
     public GameObject BeginMenu;
     public GameObject GetReadyMenu;
@@ -33,9 +39,15 @@ public class FlappyController : MonoBehaviour
     public Transform[] Tubes;
     public Sprite[] Backgrounds;
 
+    private int _score;
+    public int Score { get { return _score; } set { _score = value; ScoreText.text = string.Format("{0}", _score); } }
+    private int _hiscore;
+    public int HiScore { get { return _hiscore; } set { _hiscore = value; File.WriteAllText(_highscoreFile, string.Format("{0}", _hiscore)); } }
     private Button _touchedButton;
     private Button TouchedButton { set { if(value == null && _touchedButton != null) _touchedButton.OnClick(); _touchedButton = value; } }
     private bool IsDead { get { return BirdieAnimation.GetBool("IsDead"); } set { BirdieAnimation.SetBool("IsDead", value); } }
+
+    private string _highscoreFile;
 
     void Start()
     {
@@ -43,8 +55,17 @@ public class FlappyController : MonoBehaviour
 
         _tubeHolderStartingPosition = TubeHolder.position;
         _birdieStartingPosition = BirdieTransform.position;
+        _highscoreFile = Path.Combine(Application.persistentDataPath, "HIGHSCORE");
 
         BirdieTransform.position = Vector3.zero;
+        AssignLayerOrders();
+
+        if (File.Exists(_highscoreFile))
+            HiScore = int.Parse(File.ReadAllText(_highscoreFile));
+        else
+            HiScore = 0;
+
+        AspectRatioScaler.localScale = Vector2.right * ((((float)Screen.width)/Screen.height)/(9.0f/16.0f)) + Vector2.up;
     }
 
 	void Update ()
@@ -72,7 +93,7 @@ public class FlappyController : MonoBehaviour
                 BirdieAnimation.transform.localRotation = Quaternion.Euler(0, 0, 0);
             #endregion
         }
-        else if (IsDead && _currentPosition.y > -1.28f)
+        else if (IsDead && _currentPosition.y > -1.60f)
         {
             _verticalSpeed = -MaximumFallSpeed;
             _currentPosition.y += _verticalSpeed * Time.deltaTime;
@@ -81,6 +102,11 @@ public class FlappyController : MonoBehaviour
 
 	    UpdateTouch();
 	}
+
+    void AssignLayerOrders()
+    {
+        ScoreText.renderer.sortingOrder = 2;
+    }
 
     void UpdateTouch()
     {
@@ -131,8 +157,10 @@ public class FlappyController : MonoBehaviour
             {
                 _canPlay = false;
                 _isPlaying = true;
+                Swing.enabled = false;
                 _currentPosition = BirdieTransform.position;
                 _tubeCurrentPosition = TubeHolder.position;
+                StartCoroutine(ChangeTextOpacity(TapText, 0, 100));
                 StartCoroutine(ChangeOpacity(GetReadySprite, 0, 100));
                 _verticalSpeed = JumpSpeed;
             }
@@ -149,7 +177,9 @@ public class FlappyController : MonoBehaviour
         Score = 0;
         _canPlay = true;
         _recycledTube = 0;
+        Swing.enabled = true;
         GroundAnimation.speed = 1;
+        ScoreText.gameObject.SetActive(true);
         BirdieAnimation.SetBool("IsDead", false);
         BirdieAnimation.SetInteger("Color", Random.Range(0, 3));
         TubeHolder.position = _tubeHolderStartingPosition;
@@ -164,12 +194,18 @@ public class FlappyController : MonoBehaviour
         EndMenu.SetActive(false);
         BeginMenu.SetActive(false);
         GetReadyMenu.SetActive(true);
+        StartCoroutine(ChangeTextOpacity(TapText, 1, 50));
         StartCoroutine(ChangeOpacity(GetReadySprite, 1, 50));
+        TapText.gameObject.SetActive(true);
     }
 
     public void BirdieCrashed()
     {
         _isPlaying = false;
+        if (Score > HiScore) HiScore = Score;
+        ScoreText.gameObject.SetActive(false);
+        FinalScoreText.text = string.Format("{0}", Score);
+        FinalHiScoreText.text = string.Format("{0}", HiScore);
         BirdieAnimation.transform.localRotation = Quaternion.Euler(0, 0, -90);
         BirdieAnimation.SetBool("IsDead", true);
         GroundAnimation.speed = 0;
@@ -200,9 +236,36 @@ public class FlappyController : MonoBehaviour
             child.color = color;
         }
     }
+    IEnumerator ChangeTextOpacity(TextMesh sprite, float targetOpacity, int updateCount)
+    {
+        int current = 0;
+        Color color = sprite.color;
+
+        while (current < updateCount)
+        {
+            color.a = Mathf.Lerp(color.a, targetOpacity, ((float)current) / updateCount);
+            sprite.color = color;
+            foreach (SpriteRenderer child in sprite.GetComponentsInChildren<SpriteRenderer>())
+            {
+                child.color = color;
+            }
+            yield return new WaitForEndOfFrame();
+            current++;
+        }
+
+        color.a = targetOpacity;
+        sprite.color = color;
+        foreach (SpriteRenderer child in sprite.GetComponentsInChildren<SpriteRenderer>())
+        {
+            child.color = color;
+        }
+    }
 
     public void RecycleTube(Transform tube)
     {
+        for (int i = 0; i < tube.childCount; i++)
+            tube.GetChild(i).collider2D.enabled = true;
+         
         tube.localPosition = new Vector3(_recycledTube * 2, Random.Range(-0.5f, 1.5f), 0);
         _recycledTube++;
     }

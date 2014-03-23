@@ -5,7 +5,7 @@
 	<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
 	<ProductVersion>10.0.20506</ProductVersion>
 	<SchemaVersion>2.0</SchemaVersion>
-	<ProjectGuid>{071E10C7-98A1-E18C-E3D1-1B0603687006}</ProjectGuid>
+	<ProjectGuid>{0B7DE1E9-A479-2F75-5CE3-C68DE2A89690}</ProjectGuid>
 	<OutputType>Library</OutputType>
 	<AppDesignerFolder>Properties</AppDesignerFolder>
 	<RootNamespace></RootNamespace>
@@ -47,9 +47,11 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\Birdie.cs" />
+     <Compile Include="Assets\Scripts\BirdieSwing.cs" />
      <Compile Include="Assets\Scripts\Button.cs" />
      <Compile Include="Assets\Scripts\Buttons\RestartButton.cs" />
      <Compile Include="Assets\Scripts\FlappyController.cs" />
+     <Compile Include="Assets\Scripts\SortingOrderSetter.cs" />
      <Compile Include="Assets\Scripts\TubeRecycler.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
