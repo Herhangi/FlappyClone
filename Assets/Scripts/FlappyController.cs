@@ -6,15 +6,20 @@ using Random = UnityEngine.Random;
 
 public class FlappyController : MonoBehaviour
 {
-    private bool _canPlay;
-    private bool _isPlaying;
-    private int _recycledTube;
-    private float _verticalSpeed;
-    private Vector3 _currentPosition;
-    private Vector3 _tubeCurrentPosition;
-    private Vector3 _birdieStartingPosition;
-    private Vector3 _tubeHolderStartingPosition;
-
+    #region Properties
+    private int _score;
+    public int Score { get { return _score; } set { _score = value; ScoreText.text = string.Format("{0}", _score); } }
+    private int _hiscore;
+    public int HiScore { get { return _hiscore; } set { _hiscore = value; File.WriteAllText(_highscoreFile, string.Format("{0}", _hiscore)); } }
+    private Button _touchedButton;
+    private Button TouchedButton { set { if (value == null && _touchedButton != null) _touchedButton.OnClick(); _touchedButton = value; } }
+    private bool IsDead { get { return BirdieAnimation.GetBool("IsDead"); } set { BirdieAnimation.SetBool("IsDead", value); } }
+    #endregion
+    #region Public Variables
+    public BirdieSwing Swing;
+    public GameObject EndMenu;
+    public GameObject BeginMenu;
+    public GameObject GetReadyMenu;
     public TextMesh TapText;
     public TextMesh ScoreText;
     public TextMesh FinalScoreText;
@@ -31,24 +36,22 @@ public class FlappyController : MonoBehaviour
     public SpriteRenderer GetReadySprite;
     public SpriteRenderer BackgroundSprite;
 
-    public BirdieSwing Swing;
-    public GameObject EndMenu;
-    public GameObject BeginMenu;
-    public GameObject GetReadyMenu;
-
     public Transform[] Tubes;
     public Sprite[] Backgrounds;
-
-    private int _score;
-    public int Score { get { return _score; } set { _score = value; ScoreText.text = string.Format("{0}", _score); } }
-    private int _hiscore;
-    public int HiScore { get { return _hiscore; } set { _hiscore = value; File.WriteAllText(_highscoreFile, string.Format("{0}", _hiscore)); } }
-    private Button _touchedButton;
-    private Button TouchedButton { set { if(value == null && _touchedButton != null) _touchedButton.OnClick(); _touchedButton = value; } }
-    private bool IsDead { get { return BirdieAnimation.GetBool("IsDead"); } set { BirdieAnimation.SetBool("IsDead", value); } }
-
+    #endregion
+    #region Private Variables
+    private bool _canPlay;
+    private bool _isPlaying;
+    private int _recycledTube;
+    private float _verticalSpeed;
     private string _highscoreFile;
+    private Vector3 _currentPosition;
+    private Vector3 _tubeCurrentPosition;
+    private Vector3 _birdieStartingPosition;
+    private Vector3 _tubeHolderStartingPosition;
+    #endregion
 
+    #region Unity Methods
     void Start()
     {
         Instance = this;
@@ -58,14 +61,18 @@ public class FlappyController : MonoBehaviour
         _highscoreFile = Path.Combine(Application.persistentDataPath, "HIGHSCORE");
 
         BirdieTransform.position = Vector3.zero;
-        AssignLayerOrders();
 
         if (File.Exists(_highscoreFile))
             HiScore = int.Parse(File.ReadAllText(_highscoreFile));
         else
             HiScore = 0;
 
-        AspectRatioScaler.localScale = Vector2.right * ((((float)Screen.width)/Screen.height)/(9.0f/16.0f)) + Vector2.up;
+        AspectRatioScaler.localScale = Vector2.right * ((((float)Screen.width) / Screen.height) / (9.0f / 16.0f)) + Vector2.up;
+        
+#if UNITY_ANDROID && !UNITY_EDITOR
+        AdMobUnityPlugin.StartAds();
+        AdMobUnityPlugin.HideAds();
+#endif
     }
 
 	void Update ()
@@ -102,12 +109,8 @@ public class FlappyController : MonoBehaviour
 
 	    UpdateTouch();
 	}
-
-    void AssignLayerOrders()
-    {
-        ScoreText.renderer.sortingOrder = 2;
-    }
-
+    #endregion
+    #region Touch Methods
     void UpdateTouch()
     {
 #if (UNITY_IPHONE || UNITY_ANDROID) && !UNITY_EDITOR
@@ -116,7 +119,7 @@ public class FlappyController : MonoBehaviour
             Touch touch = Input.GetTouch(i);
             if (touch.phase == TouchPhase.Began)
             {
-                OnTouch(touch.position);      
+                OnTouch();      
             }
             else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
             {
@@ -126,7 +129,7 @@ public class FlappyController : MonoBehaviour
 #else
         if (Input.GetMouseButtonDown(0))
         {
-            OnTouch(Input.mousePosition);
+            OnTouch();
         }
         else if(Input.GetMouseButtonUp(0))
         {
@@ -135,7 +138,7 @@ public class FlappyController : MonoBehaviour
 #endif
     }
 
-    void OnTouch(Vector3 position)
+    void OnTouch()
     {
         RaycastHit2D[] hits = Physics2D.LinecastAll(Camera.main.ScreenToWorldPoint(Input.mousePosition), Camera.main.ScreenToWorldPoint(Input.mousePosition));
 
@@ -173,19 +176,23 @@ public class FlappyController : MonoBehaviour
             audio.Play();
         }
     }
+    #endregion
 
     public void Reset()
     {
         Score = 0;
+        IsDead = false;
         _canPlay = true;
         _recycledTube = 0;
         Swing.enabled = true;
         GroundAnimation.speed = 1;
+#if UNITY_ANDROID && !UNITY_EDITOR
+        AdMobUnityPlugin.HideAds();
+#endif
         ScoreText.gameObject.SetActive(true);
-        BirdieAnimation.SetBool("IsDead", false);
-        BirdieAnimation.SetInteger("Color", Random.Range(0, 3));
         TubeHolder.position = _tubeHolderStartingPosition;
         BirdieTransform.position = _birdieStartingPosition;
+        BirdieAnimation.SetInteger("Color", Random.Range(0, 3));
         BirdieAnimation.transform.localRotation = Quaternion.Euler(0, 0, 0);
         BackgroundSprite.sprite = Backgrounds[Random.Range(0, Backgrounds.Length)];
 
@@ -200,47 +207,36 @@ public class FlappyController : MonoBehaviour
         StartCoroutine(ChangeOpacity(GetReadySprite, 1, 50));
         TapText.gameObject.SetActive(true);
     }
-
     public bool BirdieCrashed()
     {
         if (!_isPlaying) return false;
 
+        IsDead = true;
         _isPlaying = false;
         if (Score > HiScore) HiScore = Score;
         ScoreText.gameObject.SetActive(false);
         FinalScoreText.text = string.Format("{0}", Score);
         FinalHiScoreText.text = string.Format("{0}", HiScore);
         BirdieAnimation.transform.localRotation = Quaternion.Euler(0, 0, -90);
-        BirdieAnimation.SetBool("IsDead", true);
         GroundAnimation.speed = 0;
         EndMenu.SetActive(true);
+        
+#if UNITY_ANDROID && !UNITY_EDITOR
+        if (Random.Range(0, 100) < 50) AdMobUnityPlugin.SetPosition("middle", "top");
+        else AdMobUnityPlugin.SetPosition("middle", "bottom");
+        AdMobUnityPlugin.ShowAds();
+#endif
         return true;
     }
-
-    IEnumerator ChangeOpacity(SpriteRenderer sprite, float targetOpacity, int updateCount)
+    public void RecycleTube(Transform tube)
     {
-        int current = 0;
-        Color color = sprite.color;
+        for (int i = 0; i < tube.childCount; i++)
+            tube.GetChild(i).collider2D.enabled = true;
 
-        while (current < updateCount)
-        {
-            color.a = Mathf.Lerp(color.a, targetOpacity, ((float)current)/updateCount);
-            sprite.color = color;
-            foreach (SpriteRenderer child in sprite.GetComponentsInChildren<SpriteRenderer>())
-            {
-                child.color = color;
-            }
-            yield return new WaitForEndOfFrame();
-            current++;
-        }
-
-        color.a = targetOpacity;
-        sprite.color = color;
-        foreach (SpriteRenderer child in sprite.GetComponentsInChildren<SpriteRenderer>())
-        {
-            child.color = color;
-        }
+        tube.localPosition = new Vector3(_recycledTube * 2, Random.Range(-0.5f, 1.5f), 0);
+        _recycledTube++;
     }
+
     IEnumerator ChangeTextOpacity(TextMesh sprite, float targetOpacity, int updateCount)
     {
         int current = 0;
@@ -265,59 +261,32 @@ public class FlappyController : MonoBehaviour
             child.color = color;
         }
     }
-
-    public void RecycleTube(Transform tube)
+    IEnumerator ChangeOpacity(SpriteRenderer sprite, float targetOpacity, int updateCount)
     {
-        for (int i = 0; i < tube.childCount; i++)
-            tube.GetChild(i).collider2D.enabled = true;
-         
-        tube.localPosition = new Vector3(_recycledTube * 2, Random.Range(-0.5f, 1.5f), 0);
-        _recycledTube++;
+        int current = 0;
+        Color color = sprite.color;
+
+        while (current < updateCount)
+        {
+            color.a = Mathf.Lerp(color.a, targetOpacity, ((float)current)/updateCount);
+            sprite.color = color;
+            foreach (SpriteRenderer child in sprite.GetComponentsInChildren<SpriteRenderer>())
+            {
+                child.color = color;
+            }
+            yield return new WaitForEndOfFrame();
+            current++;
+        }
+
+        color.a = targetOpacity;
+        sprite.color = color;
+        foreach (SpriteRenderer child in sprite.GetComponentsInChildren<SpriteRenderer>())
+        {
+            child.color = color;
+        }
     }
 
     #region Singleton Implementation
     public static FlappyController Instance { get; private set; }
     #endregion
-
-     RaycastHit2D? GetFrontmostRaycastHit()
-     {
-        RaycastHit2D[] hits = Physics2D.LinecastAll (Camera.main.ScreenToWorldPoint(Input.mousePosition), Camera.main.ScreenToWorldPoint(Input.mousePosition));
- 
-        if (hits.Length != 0)
-        {
-            int topSortingLayer = 0;
-            int[] sortingLayerIDArray = new int[hits.Length];
-            int[] sortingOrderArray= new int[hits.Length];
-            int topSortingOrder= 0;
-            int indexOfTopSortingOrder = 0;
- 
-            for (var i = 0; i < hits.Length; i++)
-            {
-                SpriteRenderer spriteRenderer = (SpriteRenderer)hits[i].collider.gameObject.GetComponent(typeof(SpriteRenderer));
-                if (spriteRenderer == null) continue;
-                sortingLayerIDArray[i] = spriteRenderer.sortingLayerID;
-                sortingOrderArray[i] = spriteRenderer.sortingOrder;
-            }
-               
-            for (var j = 0; j < sortingLayerIDArray.Length; j++)
-            {
-                if (sortingLayerIDArray[j] >= topSortingLayer)
-                {
-                    topSortingLayer = sortingLayerIDArray[j];
-                }
-            }
- 
-            for (var k = 0; k < sortingOrderArray.Length; k++)
-            {
-                if (sortingOrderArray[k] >= topSortingOrder && sortingLayerIDArray[k] == topSortingLayer)
-                {
-                    topSortingOrder = sortingOrderArray[k];
-                    indexOfTopSortingOrder = k;
-                }
-            }
- 
-            return hits[indexOfTopSortingOrder];
-        }
-        return null;
-    }
 }

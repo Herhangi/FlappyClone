@@ -5,6 +5,7 @@ public class Birdie : MonoBehaviour
     public AudioClip ScoreClip;
     public AudioClip DeathClip;
 
+    #region Unity Methods
     void OnTriggerEnter2D(Collider2D col)
     {
         if (col.name.Equals("Scorer"))
@@ -21,4 +22,5 @@ public class Birdie : MonoBehaviour
             audio.Play();
         }
     }
+    #endregion
 }

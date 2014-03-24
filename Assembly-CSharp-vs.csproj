@@ -53,6 +53,12 @@
      <Compile Include="Assets\Scripts\FlappyController.cs" />
      <Compile Include="Assets\Scripts\SortingOrderSetter.cs" />
      <Compile Include="Assets\Scripts\TubeRecycler.cs" />
+     <None Include="Assets\Plugins\Android\AndroidManifest.xml" />
+     <None Include="Assets\Plugins\ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Assembly-CSharp-firstpass-vs.csproj">
+      <Project>{BC763B0A-94B7-803C-DF43-0F77086396D8}</Project>      <Name>Assembly-CSharp-firstpass-vs</Name>    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -4,23 +4,25 @@ public class BirdieSwing : MonoBehaviour
 {
     public float Speed;
     public float Border;
-    private bool isGoingTop;
+    private bool _isGoingTop;
 
+    #region Unity Methods
     void Update ()
     {
-	    if (isGoingTop)
+	    if (_isGoingTop)
 	    {
 	        transform.localPosition += Vector3.up*Speed*Time.deltaTime;
 
 	        if (transform.localPosition.y > Border)
-	            isGoingTop = false;
+	            _isGoingTop = false;
 	    }
 	    else
         {
             transform.localPosition -= Vector3.up * Speed * Time.deltaTime;
 
             if (transform.localPosition.y < -Border)
-                isGoingTop = true;
+                _isGoingTop = true;
 	    }
-	}
+    }
+    #endregion
 }

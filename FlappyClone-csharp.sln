@@ -1,6 +1,8 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2008
 
+Project("{988D95CE-0977-C350-5D05-7283E627B6ED}") = "FlappyClone", "Assembly-CSharp-firstpass-vs.csproj", "{BC763B0A-94B7-803C-DF43-0F77086396D8}"
+EndProject
 Project("{988D95CE-0977-C350-5D05-7283E627B6ED}") = "FlappyClone", "Assembly-CSharp-vs.csproj", "{0B7DE1E9-A479-2F75-5CE3-C68DE2A89690}"
 EndProject
 Global
@@ -9,6 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BC763B0A-94B7-803C-DF43-0F77086396D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC763B0A-94B7-803C-DF43-0F77086396D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC763B0A-94B7-803C-DF43-0F77086396D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC763B0A-94B7-803C-DF43-0F77086396D8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0B7DE1E9-A479-2F75-5CE3-C68DE2A89690}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0B7DE1E9-A479-2F75-5CE3-C68DE2A89690}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B7DE1E9-A479-2F75-5CE3-C68DE2A89690}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -17,7 +23,7 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-														GlobalSection(MonoDevelopProperties) = preSolution
+																	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Assembly-CSharp.csproj
 		Policies = $0
 		$0.TextStylePolicy = $1
