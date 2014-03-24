@@ -163,12 +163,14 @@ public class FlappyController : MonoBehaviour
                 StartCoroutine(ChangeTextOpacity(TapText, 0, 100));
                 StartCoroutine(ChangeOpacity(GetReadySprite, 0, 100));
                 _verticalSpeed = JumpSpeed;
+                audio.Play();
             }
         }
         else
         {
             if(BirdieTransform.position.y < 2.25f)
                 _verticalSpeed = JumpSpeed;
+            audio.Play();
         }
     }
 
@@ -199,8 +201,10 @@ public class FlappyController : MonoBehaviour
         TapText.gameObject.SetActive(true);
     }
 
-    public void BirdieCrashed()
+    public bool BirdieCrashed()
     {
+        if (!_isPlaying) return false;
+
         _isPlaying = false;
         if (Score > HiScore) HiScore = Score;
         ScoreText.gameObject.SetActive(false);
@@ -210,6 +214,7 @@ public class FlappyController : MonoBehaviour
         BirdieAnimation.SetBool("IsDead", true);
         GroundAnimation.speed = 0;
         EndMenu.SetActive(true);
+        return true;
     }
 
     IEnumerator ChangeOpacity(SpriteRenderer sprite, float targetOpacity, int updateCount)

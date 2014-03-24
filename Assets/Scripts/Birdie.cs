@@ -2,14 +2,23 @@
 
 public class Birdie : MonoBehaviour
 {
+    public AudioClip ScoreClip;
+    public AudioClip DeathClip;
+
     void OnTriggerEnter2D(Collider2D col)
     {
         if (col.name.Equals("Scorer"))
         {
+            audio.clip = ScoreClip;
             col.collider2D.enabled = false;
             FlappyController.Instance.Score++;
+
+            audio.Play();
         }
-        else
-            FlappyController.Instance.BirdieCrashed();
+        else if(FlappyController.Instance.BirdieCrashed())
+        {
+            audio.clip = DeathClip;
+            audio.Play();
+        }
     }
 }
